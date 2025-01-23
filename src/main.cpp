@@ -86,40 +86,35 @@ class Graphics {
             window = SDL_CreateWindow("CHIP8 EMU", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCALE * WIDTH, SCALE * HEIGHT, SDL_WINDOW_SHOWN);
             renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-            if(imguiInit) {
-                //IMGUI
-                IMGUI_CHECKVERSION();
-                ImGui::CreateContext();
-                ImGuiIO& io = ImGui::GetIO(); (void)io;
-                io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-                ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-                ImGui_ImplSDLRenderer2_Init(renderer);
-            }
-
-
-
             //Background Color
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
-            SDL_RenderPresent(renderer);
+            //SDL_RenderPresent(renderer);
         }
 
-        void drawPixel(int x, int y) {
-            SDL_Rect rect;
-            rect.x = x * SCALE;
-            rect.y = y * SCALE;
-            rect.w = SCALE;
-            rect.h = SCALE;
-            
+        void drawDisplay(unsigned char display[64][32]) {
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderClear(renderer);
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            SDL_RenderFillRect(renderer, &rect);
-
-            if(imguiInit){
-                ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+            for (int i = 0; i < 64; i++)
+            {
+                for (int j = 0; j < 32; j++)
+                {
+                    if (display[i][j] == 1)
+                    {
+                        SDL_Rect rect;
+                        rect.x = i * SCALE;
+                        rect.y = j * SCALE;
+                        rect.w = SCALE;
+                        rect.h = SCALE;
+                        SDL_RenderFillRect(renderer, &rect);
+                    }
+                }
             }
-
+            
             SDL_RenderPresent(renderer);
+
+     
         }
 
         void clear() {
@@ -145,40 +140,19 @@ class Chip8 {
         unsigned char v[16]; // 16 8-bit general-purpose variable registers
         unsigned char display[64][32]; // 64 x 32 monochrome display
         Graphics& graphics;
+        bool drawFlag = false;
 
         Chip8(Graphics& _graphics) : graphics(_graphics) {}
 
-        unsigned char font[80] = {
-            0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-            0x20, 0x60, 0x20, 0x20, 0x70, // 1
-            0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-            0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-            0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-            0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-            0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-            0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-            0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-            0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-            0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-            0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-            0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-            0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-            0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-            0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-        };
-
-
         void init() {
+            memory[4096] = {};
             pc = 0x200; // Program counter starts at 0x200
             index = 0x0000; // Clear index register
+            stack[64] = {};
             delay_timer = 0x000; // Clear delay timer
             sound_timer = 0x000; // Clear sound timer
-
-            //Load Font to Memory
-            /*for (int i = 0; i < 80; i++)
-            {
-                memory[i] = font[i];
-            }*/
+            v[16] = {};
+            display[64][32] = {};
         }
 
         void loadROM(string fileName){
@@ -218,95 +192,98 @@ class Chip8 {
         }
 
         void cycle(){
+
+
+            unsigned short ipf = 11;
             
-            //----FETCH----
+            //Instructions per Frame
+            while (ipf > 0)
+            {
+                //----FETCH----
 
-            //firstByte:     0000 0101
-            //Shift 8 bits : 0000 0101 0000 0000
-            //| secondByte:            0000 1010
-            //Result:        0000 0101 0000 1010
-            unsigned char firstByte = memory[pc];
-            unsigned char secondByte = memory[pc + 1];  
-            unsigned short opcode = (firstByte << 8) | secondByte;
+                //firstByte:     0000 0101
+                //Shift 8 bits : 0000 0101 0000 0000
+                //| secondByte:            0000 1010
+                //Result:        0000 0101 0000 1010
+                unsigned char firstByte = memory[pc];
+                unsigned char secondByte = memory[pc + 1];  
+                unsigned short opcode = (firstByte << 8) | secondByte;
 
-            //Get First Code from Opcode
-            //Opcode :              1010 0000 1111 0000  (0xAF0)
-            //& 0xF000:             1111 0000 0000 0000
-            //                      1010 0000 0000 0000
-            //Shift 12 bits:        0000 0000 0000 1010
-            unsigned short code = (opcode & 0xF000) >> 12;
+                //Get First Code from Opcode
+                //Opcode :              1010 0000 1111 0000  (0xAF0)
+                //& 0xF000:             1111 0000 0000 0000
+                //                      1010 0000 0000 0000
+                //Shift 12 bits:        0000 0000 0000 1010
+                unsigned short code = (opcode & 0xF000) >> 12;
 
-            //PRINT OPCODE
-            //cout << hex << opcode << endl;
+                //PRINT OPCODE
+                //cout << hex << opcode << endl;
 
-            //PRINT CODE
-            //cout << hex << code << endl;  
+                //PRINT CODE
+                //cout << hex << code << endl;  
 
-            //Increment Program Counter
-            pc = pc + 2;
+                //Increment Program Counter
+                pc = pc + 2;
 
-            //----DECODE----
+                //----DECODE----
+                switch(code) {
+                    case 0: //Clear Display 
+                        cout << "Clear Display" << endl;
+                        graphics.clear();
+                        break;
+                    case 0x1:
+                        //cout << "Jump" << endl;
 
-            unsigned short address;
-            unsigned short reg;
-            unsigned short value;
+                        //Extract Address from Opcode
+                        //Opcode:   0001 0101 1010 0101  (0x15A5)
+                        //&0x0FFF:  0000 1111 1111 1111 
+                        //Result:   0000 0000 0101 1010
+                        //Set Program Counter to Address
+                        pc = opcode & 0x0FFF;;
 
-            switch(code) {
-                case 0: //Clear Display 
-                    cout << "Clear Display" << endl;
-                    graphics.clear();
-                    break;
-                case 0x1:
-                    //cout << "Jump" << endl;
+                        break;
+                    case 0x6:
+                        //cout << "Set Register" << endl;
 
-                    //Extract Address from Opcode
-                    //Opcode:   0001 0101 1010 0101  (0x15A5)
-                    //&0x0FFF:  0000 1111 1111 1111 
-                    //Result:   0000 0000 0101 1010
-                    //Set Program Counter to Address
-                    pc = opcode & 0x0FFF;;
+                        //Extract Register from Opcode
+                        //Opcode:       0110 0001 1010 0101  (0x15A5)
+                        //&0x0F00:      0000 1111 0000 0000
+                        //              0000 0001 0000 0000
+                        //Shift 8 bits: 0000 0000 0000 0001
 
-                    break;
-                case 0x6:
-                    //cout << "Set Register" << endl;
+                        //Extract Value from Opcode
+                        //Opcode:       0110 0001 1010 0101  (0x15A5)
+                        //&0x00FF:      0000 0000 1111 1111
+                        //              0000 0000 1010 0101
 
-                    //Extract Register from Opcode
-                    //Opcode:       0110 0001 1010 0101  (0x15A5)
-                    //&0x0F00:      0000 1111 0000 0000
-                    //              0000 0001 0000 0000
-                    //Shift 8 bits: 0000 0000 0000 0001
+                        //Set Register
+                        v[(opcode & 0x0F00) >> 8] = opcode & 0x00FF;
 
-                    //Extract Value from Opcode
-                    //Opcode:       0110 0001 1010 0101  (0x15A5)
-                    //&0x00FF:      0000 0000 1111 1111
-                    //              0000 0000 1010 0101
+                        break;
+                    case 0x7:
+                        //cout << "Add Value to Register" << endl;
 
-                    //Set Register
-                    v[(opcode & 0x0F00) >> 8] = opcode & 0x00FF;
+                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] + opcode & 0x00FF;
 
-                    break;
-                case 0x7:
-                    //cout << "Add Value to Register" << endl;
+                        break;
+                    case 0xA:
+                        //cout << "Set Index" << endl;
 
-                    v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] + opcode & 0x00FF;
+                        //Set Index Register
+                        index = opcode & 0x0FFF;
 
-                    break;
-                case 0xA:
-                    //cout << "Set Index" << endl;
+                        break;
+                    case 0xD:
+                        //cout << "Draw" << endl;
+                        draw(opcode);
+                        break;
+                    default:
+                        cout << "Unknown opcode" << endl;
+                        break; 
+                }
 
-                    //Set Index Register
-                    index = opcode & 0x0FFF;
-
-                    break;
-                case 0xD:
-                    //cout << "Draw" << endl;
-                    draw(opcode);
-                    break;
-                default:
-                    cout << "Unknown opcode" << endl;
-                    break; 
+                ipf--;
             }
-
         }
 
         void draw(unsigned short opcode) {
@@ -364,83 +341,13 @@ class Chip8 {
                                 display[coordX][coordY] = 1;
                             } 
                         }
-
                         coordX++;
                     } 
                 }
-
                 coordY++;
             }
 
-
-
-
-
-
-
-
-
-
-            /*for (int i = 0; i < rows; i++)
-            {
-
-                
-
-                spriteRow = memory[index + i];
-                
-                //Reset coordX to original X
-                coordX = orgX;
-
-                for (int j = 0; j < 8; j++)
-                {
-                    //Sprite Pixel
-                    //1010 0010
-                    //>> 8 -j = 0000 0001
-                    //& 1 = 0000 0001
-                    //Result: 1
-
-                    unsigned int pixel = (spriteRow >> 8 - j) & 1;
-
-                    if (pixel)
-                    {
-                        if(display[coordX][coordY] == 1)
-                        {
-                            v[15] = 1;
-                            display[coordX][coordY] = 0;
-                        } else {
-                            display[coordX][coordY] = pixel;
-                        } 
-                    }
-
-                    if(coordX >= 64) break;
-        
-                    coordX++;
-                }
-
-                coordY++;
-
-                if(coordY >= 32) break;
-
-                
-            }*/
-
-
-
-
-
-            //Draw Display
-            for (int i = 0; i < 64; i++)
-            {
-                for (int j = 0; j < 32; j++)
-                {
-                    if (display[i][j] == 1)
-                    {
-                        graphics.drawPixel(i, j);
-                    }
-                }
-            }
-
-            
+            drawFlag = true;
         }
 
 
@@ -460,15 +367,18 @@ int main(int argv, char** args)
     chip8.init();
 
     //Load ROM
-    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\2-ibm-logo.ch8");
+    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\ibm.ch8");
 
     bool quit = false;
-    while (!quit) {
+    while (!quit)
+    {
 
         //Wait for Key Press
         SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
                 quit = true;
             }
             if(graphics.imguiInit){
@@ -480,28 +390,19 @@ int main(int argv, char** args)
 
         
 
-        //Emulator Loop
+        //Emulator Loop (Frame) 
         chip8.cycle();
 
-   
+        //Sleep
+        SDL_Delay(16);
 
-        if(graphics.imguiInit){
-
-            ImGui_ImplSDLRenderer2_NewFrame();
-            ImGui_ImplSDL2_NewFrame();
-            ImGui::NewFrame();
-
-            ImGui::Begin("Hello, world!");
-
-            ImGui::Text("This is some useful text.");
-
-            ImGui::End();
-
-            ImGui::Render();
-
+        //Update Display
+        if(chip8.drawFlag)
+        {
+            chip8.drawFlag = false;
+            graphics.drawDisplay(chip8.display);
         }
-
-
+        
 
 
       
@@ -511,14 +412,6 @@ int main(int argv, char** args)
     SDL_DestroyRenderer(graphics.renderer);
     SDL_DestroyWindow(graphics.window);
     SDL_Quit();
-
-    if(graphics.imguiInit){
-
-        ImGui_ImplSDLRenderer2_Shutdown();
-        ImGui_ImplSDL2_Shutdown();
-        ImGui::DestroyContext();
-
-    }
 
     return 0;
 }
