@@ -131,29 +131,18 @@ class Chip8 {
 
     public:
 
-        unsigned char memory[4096]; // 4KB of memory
-        unsigned short pc; // 16-bit program counter
-        unsigned short index; // 16-bit index register
-        unsigned short stack[64]; // 64 16-bit addresses
-        unsigned char delay_timer; // 8-bit delay timer
-        unsigned char sound_timer; // 8-bit sound timer
-        unsigned char v[16]; // 16 8-bit general-purpose variable registers
-        unsigned char display[64][32]; // 64 x 32 monochrome display
+        unsigned char memory[4096]{}; // 4KB of memory
+        unsigned short pc = 0x200; // 16-bit program counter
+        unsigned short index = 0x0000; // 16-bit index register
+        unsigned short stack[64]{}; // 64 16-bit addresses
+        unsigned char delay_timer = 0x000; // 8-bit delay timer
+        unsigned char sound_timer = 0x000; // 8-bit sound timer
+        unsigned char v[16]{}; // 16 8-bit general-purpose variable registers
+        unsigned char display[64][32]{}; // 64 x 32 monochrome display
         Graphics& graphics;
         bool drawFlag = false;
 
         Chip8(Graphics& _graphics) : graphics(_graphics) {}
-
-        void init() {
-            memory[4096] = {};
-            pc = 0x200; // Program counter starts at 0x200
-            index = 0x0000; // Clear index register
-            stack[64] = {};
-            delay_timer = 0x000; // Clear delay timer
-            sound_timer = 0x000; // Clear sound timer
-            v[16] = {};
-            display[64][32] = {};
-        }
 
         void loadROM(string fileName){
 
@@ -195,6 +184,10 @@ class Chip8 {
 
 
             unsigned short ipf = 11;
+
+            /*Note: When you add timers (the delay-timer and the sound-timer) 
+            they need to be decremented outside that ipf loop or outside 
+            cycle in the main frame-loop.*/
             
             //Instructions per Frame
             while (ipf > 0)
@@ -364,10 +357,27 @@ int main(int argv, char** args)
     graphics.init(); //SDL + IMGUI
 
     Chip8 chip8 = Chip8(graphics);
-    chip8.init();
 
     //Load ROM
     chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\ibm.ch8");
+
+
+    /**
+     * 
+     * outer loop:
+
+        1 DEcrement timers and render display
+        2 execute inner loop
+        3 goto 1
+
+        inner loop:
+
+        execute 11ish opcodes, unless you execute a 
+        dxyn in which case you do that opcode and then 
+        finish the loop early.
+
+     */
+
 
     bool quit = false;
     while (!quit)
