@@ -4,13 +4,15 @@
 #include "graphics.h"
 #include <iostream>
 #include <fstream>
+#include <stack>
+
 
 class Chip8
 {
     unsigned char memory[4096]{};       // 4KB of memory
     unsigned short pc;                  // 16-bit program counter
     unsigned short index;               // 16-bit index register
-    unsigned short stack[64]{};         // 64 16-bit addresses
+    std::stack<unsigned short> stack;         // 64 16-bit addresses
     unsigned char delay_timer;          // 8-bit delay timer
     unsigned char sound_timer;          // 8-bit sound timer
     unsigned char v[16]{};              // 16 8-bit general-purpose variable registers

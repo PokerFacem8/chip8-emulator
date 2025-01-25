@@ -73,7 +73,7 @@ int main(int argv, char** args)
     Chip8 chip8 = Chip8();
 
     //Load ROM into memory
-    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\ibm.ch8");
+    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\4-flags.ch8");
 
 
     /**
@@ -105,6 +105,7 @@ int main(int argv, char** args)
             {
                 quit = true;
             }
+            //ImGui_ImplSDL2_ProcessEvent(&event);
         }
 
 
@@ -114,12 +115,23 @@ int main(int argv, char** args)
         //Emulator Loop (Frame) 
         chip8.cycle();
 
+        
+
+
         //Sleep
         SDL_Delay(16);
 
         //Update Display
         if(chip8.drawFlag)
         {
+            /*ImGui_ImplSDLRenderer2_NewFrame();
+            ImGui_ImplSDL2_NewFrame();
+            ImGui::NewFrame();
+            ImGui::Begin("Hello, world!");
+            ImGui::Text("This is some useful text.");
+            ImGui::End();
+            ImGui::Render();
+            */
             chip8.drawFlag = false;
             chip8.updateDisplay();
         }
@@ -131,6 +143,10 @@ int main(int argv, char** args)
     }
 
     chip8.destroyGraphics();
+
+    //ImGui_ImplSDLRenderer2_Shutdown();
+    //ImGui_ImplSDL2_Shutdown();
+    //ImGui::DestroyContext();
 
     return 0;
 }

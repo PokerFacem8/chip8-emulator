@@ -3,6 +3,7 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
+#include <stack>
 
 using namespace std; 
 
@@ -46,7 +47,7 @@ void Chip8::loadROM(string fileName){
         memory[i + pc] = buffer[i];
     }
 
-    //Dump Memory as 0x notation
+    //Dump Memory
     /*for (int i = 0; i < length; i++)
     {
         cout << hex << (int)memory[i + pc] << endl;
@@ -86,7 +87,7 @@ void Chip8::cycle(){
         unsigned short code = (opcode & 0xF000) >> 12;
 
         //PRINT OPCODE
-        //cout << hex << opcode << endl;
+        cout << hex << "Opcode: " << opcode << endl;
 
         //PRINT CODE
         //cout << hex << code << endl;  
@@ -95,11 +96,18 @@ void Chip8::cycle(){
         pc = pc + 2;
 
         //----DECODE----
-        switch(code) {
-            case 0: //Clear Display 
-                cout << "Clear Display" << endl;
-                graphics.clear(display);
+        switch(code) 
+        {
+            case 0x0: //CLS + RET
+
+                if((opcode & 0x000F) == 0){ //CLS
+                    graphics.clear(display);
+                } else { //RET
+                    pc = stack.top();
+                    stack.pop();
+                }
                 break;
+
             case 0x1:
                 //cout << "Jump" << endl;
 
@@ -109,9 +117,36 @@ void Chip8::cycle(){
                 //Result:   0000 0000 0101 1010
                 //Set Program Counter to Address
                 pc = opcode & 0x0FFF;;
-
                 break;
-            case 0x6:
+
+            case 0x2: //CALL
+
+                stack.push(pc);
+                pc = opcode & 0x0FFF;
+                break;
+
+            case 0x3: //SE Vx, byte
+
+                if(v[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF)) {
+                    pc = pc + 2; 
+                }
+                break;
+
+            case 0x4: //SNE Vx, byte
+
+                if(v[(opcode & 0x0F00) >> 8] != (opcode & 0x00FF)) {
+                    pc = pc + 2; 
+                }
+                break;
+
+            case 0x5: //SE Vx, Vy
+
+                if(v[(opcode & 0x0F00) >> 8] == v[(opcode & 0x00F0) >> 4]) {
+                    pc = pc + 2; 
+                }
+                break;
+
+            case 0x6: //LD Vx, byte
                 //cout << "Set Register" << endl;
 
                 //Extract Register from Opcode
@@ -127,25 +162,92 @@ void Chip8::cycle(){
 
                 //Set Register
                 v[(opcode & 0x0F00) >> 8] = opcode & 0x00FF;
-
                 break;
-            case 0x7:
-                //cout << "Add Value to Register" << endl;
+
+            case 0x7: //ADD Vx, byte
 
                 v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] + opcode & 0x00FF;
-
                 break;
+
+            case 0x8:
+
+                switch (opcode & 0x000F)
+                {
+                    case 0: // LD Vx, Vy
+
+                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4];
+                        break;
+
+                    case 1: // OR Vx, Vy
+
+                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] | v[(opcode & 0x0F00) >> 8];
+                        break;
+
+                    case 2: // AND Vx, Vy
+
+                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] & v[(opcode & 0x0F00) >> 8];
+                        break;
+
+                    case 3: // XOR Vx, Vy
+
+                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] ^ v[(opcode & 0x0F00) >> 8];
+                        break;
+
+                    case 4: //ADD Vx, Vy
+
+                        if ((v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4]) > 0x00FF) {
+                            v[(opcode & 0x0F00) >> 8] = (v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4]) & 0x00FF;
+                            v[15] = 1;
+                        }else {
+                            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4];
+                            v[15] = 0;
+                        }
+                        break;
+
+                    case 5: // SUB Vx, Vy
+
+                        v[15] = 1;
+                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] - v[(opcode & 0x00F0) >> 4];
+                        if(v[(opcode & 0x00F0) >> 4] > v[(opcode & 0x0F00) >> 8]) { // IF Vx < Vy
+                            v[15] = 0;
+                        }
+                        break;
+
+                    case 6:
+
+                        break;
+
+                    case 7: //  SUBN Vx, Vy
+
+                        v[15] = 1;
+                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] - v[(opcode & 0x0F00) >> 8];
+                        if(v[(opcode & 0x00F0) >> 4] < v[(opcode & 0x0F00) >> 8]) { // IF Vx > Vy
+                            v[15] = 0;
+                        }
+                        break;
+
+
+
+                    default:
+                        cout << "OX8 Failed" << endl;
+                        break;
+                }
+
+
+
             case 0xA:
                 //cout << "Set Index" << endl;
 
                 //Set Index Register
                 index = opcode & 0x0FFF;
-
                 break;
+
             case 0xD:
+
                 //cout << "Draw" << endl;
                 draw(opcode);
                 break;
+            
             default:
                 cout << "Unknown opcode" << endl;
                 break; 
@@ -157,9 +259,6 @@ void Chip8::cycle(){
 
 void Chip8::draw(unsigned short opcode) {
 
-    //Print Opcode
-    cout << hex << opcode << endl;
-
     unsigned short coordX;
     unsigned short coordY;
     unsigned short rows;
@@ -167,15 +266,8 @@ void Chip8::draw(unsigned short opcode) {
 
     //Extract X and Y coordinates from VX and VY
     coordX = v[(opcode & 0x0F00) >> 8] % 64;
-
-    //Print X Coordinate
-    cout << hex << "X " << coordX << endl;
-    
     coordY = v[(opcode & 0x00F0) >> 4] % 32;
 
-    //Print Y Coordinate
-    cout << hex << "Y " << coordY << endl;
-    
     const unsigned short orgX = coordX;
 
     //V15 = 0
@@ -186,9 +278,6 @@ void Chip8::draw(unsigned short opcode) {
     //& 0x000F -> 0000 0000 0000 1111
     //Result: 0000 1111 (15)
     rows = opcode & 0x000F;
-
-    //Print Rows
-    cout << hex << "Rows " << rows << endl;
 
     for (int i = 0; i < rows; i++)
     {

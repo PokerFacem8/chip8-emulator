@@ -1,6 +1,9 @@
 // chip8.h
 #ifndef graphics_h
 #define graphics_h
+#include <imgui.h>
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdlrenderer2.h>
 #include <SDL.h>
 
 class Graphics {
