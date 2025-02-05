@@ -121,17 +121,16 @@ void Chip8::cycle(){
         //----DECODE----
         switch(code) 
         {
-            case 0x00E0: // CLS (Validated)
-            
-                graphics.clear(display);
-                break;
 
-            case 0x00EE: // RET
+            case 0x0:
 
-                pc = stack.top();
-                stack.pop();
+                if ((opcode & 0x00FF) == 0xE0){ // CLS (Validated)
+                    graphics.clear(display);
+                } else if((opcode & 0x00FF) == 0xEE) { // RET
+                    pc = stack.top();
+                    stack.pop(); 
+                }
                 break;
-            
 
             case 0x1: //(Validated)
                 //cout << "Jump" << endl;
@@ -364,12 +363,13 @@ void Chip8::x8instructions(unsigned short opcode){
 
         case 5: // SUB Vx, Vy (Validated)
 
+            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] - v[(opcode & 0x00F0) >> 4];
             if (v[(opcode & 0x0F00) >> 8] > v[(opcode & 0x00F0) >> 4]) {
                 v[15] = 1;
             } else {
                 v[15] = 0;
             }
-            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] - v[(opcode & 0x00F0) >> 4];
+           
             break;
 
         case 6: //SHR Vx {, Vy} (Validated)
@@ -384,12 +384,16 @@ void Chip8::x8instructions(unsigned short opcode){
 
         case 7: //  SUBN Vx, Vy (Validated)
 
+            //Sorry, that was very short, indeed, you should first calculate the flag into a temp, set Vx and then vf to that temp.
+
+
+            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] - v[(opcode & 0x0F00) >> 8];
             if(v[(opcode & 0x00F0) >> 4] > v[(opcode & 0x0F00) >> 8]) {
                 v[15] = 1;
             } else {
                 v[15] = 0;
             }
-            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] - v[(opcode & 0x0F00) >> 8];
+            
             break;
 
         case 0xE: //SHL Vx {, Vy} (Validated)
