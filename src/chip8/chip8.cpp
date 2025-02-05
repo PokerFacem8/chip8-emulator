@@ -8,22 +8,47 @@
 using namespace std; 
 
 
-Chip8::Chip8() : graphics(){
+Chip8::Chip8() : graphics() {
     pc = 0x200;
     index = 0x0000;
     delay_timer = 0x000;
     sound_timer = 0x000;
     drawFlag = false;
     initGraphics();
+
+    keymap[SDL_SCANCODE_1] = 0x1;
+    keymap[SDL_SCANCODE_2] = 0x2;
+    keymap[SDL_SCANCODE_3] = 0x3;
+    keymap[SDL_SCANCODE_4] = 0xC;
+    keymap[SDL_SCANCODE_Q] = 0x4;
+    keymap[SDL_SCANCODE_W] = 0x5;
+    keymap[SDL_SCANCODE_E] = 0x6;
+    keymap[SDL_SCANCODE_R] = 0xD;
+    keymap[SDL_SCANCODE_A] = 0x7;
+    keymap[SDL_SCANCODE_S] = 0x8;
+    keymap[SDL_SCANCODE_D] = 0x9;
+    keymap[SDL_SCANCODE_F] = 0xE;
+    keymap[SDL_SCANCODE_Z] = 0xA;
+    keymap[SDL_SCANCODE_X] = 0x0;
+    keymap[SDL_SCANCODE_C] = 0xB;
+    keymap[SDL_SCANCODE_V] = 0xF;
+
+    //Load Font
+    for (int i = 0; i < 80; i++)
+    {
+        memory[i] = font[i];
+    }
 }
 
-void Chip8::initGraphics(){
+void Chip8::initGraphics() {
     graphics.init();
 }
 
-void Chip8::loadROM(string fileName){
+void Chip8::pressKey(SDL_Keycode key) {
+    pressedKey = keymap[key];
+}
 
-    char buffer[10000];
+void Chip8::loadROM(string fileName) {
 
     //Open File
     std::ifstream infile(fileName);
@@ -33,10 +58,7 @@ void Chip8::loadROM(string fileName){
     size_t length = infile.tellg();
     infile.seekg(0, std::ios::beg);
 
-    // Don't overflow the buffer!
-    if (length > sizeof (buffer)) {
-        length = sizeof (buffer);
-    }
+    char buffer[length];
 
     // Read file
     infile.read(buffer, length);
@@ -48,11 +70,12 @@ void Chip8::loadROM(string fileName){
     }
 
     //Dump Memory
-    /*for (int i = 0; i < length; i++)
+    cout << "Dump Memory: " << endl;
+    for (int i = 0; i < length; i++)
     {
-        cout << hex << (int)memory[i + pc] << endl;
-    }*/
-
+        cout << hex << (int)memory[i + pc];
+    }
+    cout << "------------------" << endl;
     //Close File
     infile.close();
 }
@@ -98,17 +121,19 @@ void Chip8::cycle(){
         //----DECODE----
         switch(code) 
         {
-            case 0x0: //CLS + RET
-
-                if((opcode & 0x000F) == 0){ //CLS
-                    graphics.clear(display);
-                } else { //RET
-                    pc = stack.top();
-                    stack.pop();
-                }
+            case 0x00E0: // CLS (Validated)
+            
+                graphics.clear(display);
                 break;
 
-            case 0x1:
+            case 0x00EE: // RET
+
+                pc = stack.top();
+                stack.pop();
+                break;
+            
+
+            case 0x1: //(Validated)
                 //cout << "Jump" << endl;
 
                 //Extract Address from Opcode
@@ -116,37 +141,37 @@ void Chip8::cycle(){
                 //&0x0FFF:  0000 1111 1111 1111 
                 //Result:   0000 0000 0101 1010
                 //Set Program Counter to Address
-                pc = opcode & 0x0FFF;;
+                pc = (opcode & 0x0FFF);
                 break;
 
-            case 0x2: //CALL
+            case 0x2: //CALL (Validated)
 
                 stack.push(pc);
-                pc = opcode & 0x0FFF;
+                pc = (opcode & 0x0FFF);
                 break;
 
-            case 0x3: //SE Vx, byte
+            case 0x3: //SE Vx, byte (Validated)
 
                 if(v[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF)) {
                     pc = pc + 2; 
                 }
                 break;
 
-            case 0x4: //SNE Vx, byte
+            case 0x4: //SNE Vx, byte (Validated)
 
                 if(v[(opcode & 0x0F00) >> 8] != (opcode & 0x00FF)) {
                     pc = pc + 2; 
                 }
                 break;
 
-            case 0x5: //SE Vx, Vy
+            case 0x5: //SE Vx, Vy (Validated)
 
                 if(v[(opcode & 0x0F00) >> 8] == v[(opcode & 0x00F0) >> 4]) {
                     pc = pc + 2; 
                 }
                 break;
 
-            case 0x6: //LD Vx, byte
+            case 0x6: //LD Vx, byte (Validated)
                 //cout << "Set Register" << endl;
 
                 //Extract Register from Opcode
@@ -161,100 +186,229 @@ void Chip8::cycle(){
                 //              0000 0000 1010 0101
 
                 //Set Register
-                v[(opcode & 0x0F00) >> 8] = opcode & 0x00FF;
+                v[(opcode & 0x0F00) >> 8] = (opcode & 0x00FF);
                 break;
 
-            case 0x7: //ADD Vx, byte
+            case 0x7: //ADD Vx, byte (Validated)
 
-                v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] + opcode & 0x00FF;
+                v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] + (opcode & 0x00FF);
                 break;
 
             case 0x8:
 
-                switch (opcode & 0x000F)
-                {
-                    case 0: // LD Vx, Vy
+                x8instructions(opcode);
+                break;
 
-                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4];
-                        break;
+            case 0x9: //SNE Vx, Vy (Validated)
 
-                    case 1: // OR Vx, Vy
-
-                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] | v[(opcode & 0x0F00) >> 8];
-                        break;
-
-                    case 2: // AND Vx, Vy
-
-                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] & v[(opcode & 0x0F00) >> 8];
-                        break;
-
-                    case 3: // XOR Vx, Vy
-
-                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] ^ v[(opcode & 0x0F00) >> 8];
-                        break;
-
-                    case 4: //ADD Vx, Vy
-
-                        if ((v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4]) > 0x00FF) {
-                            v[(opcode & 0x0F00) >> 8] = (v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4]) & 0x00FF;
-                            v[15] = 1;
-                        }else {
-                            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4];
-                            v[15] = 0;
-                        }
-                        break;
-
-                    case 5: // SUB Vx, Vy
-
-                        v[15] = 1;
-                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] - v[(opcode & 0x00F0) >> 4];
-                        if(v[(opcode & 0x00F0) >> 4] > v[(opcode & 0x0F00) >> 8]) { // IF Vx < Vy
-                            v[15] = 0;
-                        }
-                        break;
-
-                    case 6:
-
-                        break;
-
-                    case 7: //  SUBN Vx, Vy
-
-                        v[15] = 1;
-                        v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] - v[(opcode & 0x0F00) >> 8];
-                        if(v[(opcode & 0x00F0) >> 4] < v[(opcode & 0x0F00) >> 8]) { // IF Vx > Vy
-                            v[15] = 0;
-                        }
-                        break;
-
-
-
-                    default:
-                        cout << "OX8 Failed" << endl;
-                        break;
+                if(v[(opcode & 0x0F00) >> 8] != v[(opcode & 0x00F0) >> 4]){
+                    pc = pc + 2;
                 }
 
+                break;
 
-
-            case 0xA:
+            case 0xA: //LD I, addr (Validated)
                 //cout << "Set Index" << endl;
 
                 //Set Index Register
                 index = opcode & 0x0FFF;
                 break;
 
-            case 0xD:
+            case 0xB: // JP V0, addr (Validate)
 
-                //cout << "Draw" << endl;
+                pc = (opcode & 0x0FFF) + v[0];
+                break;
+
+            case 0xC: // RND Vx, byte ((Validated??)
+
+                v[(opcode & 0x0F00) >> 8] = (rand() % 256) & (opcode & 0x00FF);
+                break;
+
+            case 0xD: //(Validated)
+
                 draw(opcode);
+                break;
+
+            case 0xE:
+
+                if((opcode & 0x00FF) == 0x009E) { // SKP Vx
+                    if (v[(opcode & 0x0F00) >> 8] == pressedKey){
+                        pc = pc + 2;
+                    }
+                } else if((opcode & 0x00FF) == 0x00A1) { // SKNP Vx
+                    if (v[(opcode & 0x0F00) >> 8] != pressedKey){
+                        pc = pc + 2;
+                    }
+                }
+                break;
+
+            case 0xF:
+
+                xFinstructions(opcode);
                 break;
             
             default:
-                cout << "Unknown opcode" << endl;
+                cout << "Unknown instruction!" << endl;
                 break; 
         }
-
         ipf--;
     }
+}
+
+void Chip8::xFinstructions(unsigned short opcode) {
+
+    unsigned char h = 0;
+    unsigned char t = 0;
+    unsigned int value = 0;
+
+    switch (opcode & 0x00FF)
+    {
+        case 0x0007: // LD Vx, DT
+
+            v[(opcode & 0x0F00) >> 8] = delay_timer;
+            break;
+
+        case 0x000A: // LD Vx, K
+
+            if(pressedKey == 0x0) {
+                pc = pc - 2;
+            }
+            break;
+        
+        case 0x0015: // LD DT, Vx
+
+            delay_timer = v[(opcode & 0x0F00) >> 8];
+            break;
+
+        case 0x0018: // LD ST, Vx
+
+            sound_timer = v[(opcode & 0x0F00) >> 8];
+            break;
+
+        case 0x001E: // ADD I, Vx
+
+            index = index + v[(opcode & 0x0F00) >> 8];
+            break;   
+
+        case 0x0029: // LD F, Vx
+
+            index = v[(opcode & 0x0F00) >> 8] * 5;
+            break;   
+
+        case 0x0033: // LD B, Vx  
+
+            value = v[(opcode & 0x0F00) >> 8];
+            memory[index + 2] = value % 10;
+            value /= 10;
+            memory[index + 1] = value % 10; 
+            value /= 10;
+            memory[index] = value % 10;  
+            break;
+
+        case 0x0055: // LD [I], Vx 
+
+            for(unsigned int i = 0; i < ((opcode & 0x0F00) >> 8); i++){
+                memory[index + i] = v[i];
+            }
+            break;
+
+        case 0x0065: // LD Vx, [I]
+
+            for(unsigned int i = 0; i < ((opcode & 0x0F00) >> 8); i++){
+                v[i] = memory[index + i];
+            }
+            break;
+            
+        default:
+            cout << "Couldn't find 0xF instruction!" << endl;
+            break;
+    }
+
+}
+
+void Chip8::x8instructions(unsigned short opcode){
+
+   switch (opcode & 0x000F)
+    {
+        case 0: // LD Vx, Vy (Validated)
+
+            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4];
+            break;
+
+        case 1: // OR Vx, Vy (Validated)
+
+            v[(opcode & 0x0F00) >> 8] |= v[(opcode & 0x00F0) >> 4];
+            break;
+
+        case 2: // AND Vx, Vy (Validated)
+
+            v[(opcode & 0x0F00) >> 8] &= v[(opcode & 0x00F0) >> 4];
+            break;
+
+        case 3: // XOR Vx, Vy (Validated)
+
+            v[(opcode & 0x0F00) >> 8] ^= v[(opcode & 0x00F0) >> 4];
+            break;
+
+        case 4: //ADD Vx, Vy (Validated)
+
+            if ((v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4]) > 255) {
+                v[15] = 1;
+            }else {
+                v[15] = 0;
+            }
+
+            v[(opcode & 0x0F00) >> 8] = (v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4]) & 0xFF;
+
+            break;
+
+        case 5: // SUB Vx, Vy (Validated)
+
+            if (v[(opcode & 0x0F00) >> 8] > v[(opcode & 0x00F0) >> 4]) {
+                v[15] = 1;
+            } else {
+                v[15] = 0;
+            }
+            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] - v[(opcode & 0x00F0) >> 4];
+            break;
+
+        case 6: //SHR Vx {, Vy} (Validated)
+
+            //TODO: Line 219 must be configurable by ther user (Some roms ignore Vy)
+            //v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4];
+
+            v[15] = (v[(opcode & 0x0F00) >> 8] & 0x1);
+            //v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] / 2;
+            v[(opcode & 0x0F00) >> 8] >>= 1;
+            break;
+
+        case 7: //  SUBN Vx, Vy (Validated)
+
+            if(v[(opcode & 0x00F0) >> 4] > v[(opcode & 0x0F00) >> 8]) {
+                v[15] = 1;
+            } else {
+                v[15] = 0;
+            }
+            v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] - v[(opcode & 0x0F00) >> 8];
+            break;
+
+        case 0xE: //SHL Vx {, Vy} (Validated)
+
+            //TODO: Line 237 must be configurable by ther user (Some roms ignore Vy)
+            //[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4];
+
+            v[15] = (v[(opcode & 0x0F00) >> 8] & 0x80 >> 7);
+            //v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] * 2;
+
+            v[(opcode & 0x0F00) >> 8] <<=1;
+
+            break;
+
+        default:
+            cout << "Couldn't find 0x8 instruction!" << endl;
+            break;
+    }
+
 }
 
 void Chip8::draw(unsigned short opcode) {
@@ -315,5 +469,7 @@ void Chip8::updateDisplay() {
 void Chip8::destroyGraphics() {
     SDL_DestroyRenderer(graphics.renderer);
     SDL_DestroyWindow(graphics.window);
+    SDL_DestroyRenderer(graphics.rendererUI);
+    SDL_DestroyWindow(graphics.windowUI);
     SDL_Quit();
 }

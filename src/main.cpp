@@ -58,22 +58,33 @@ Memory Map:
     +---------------+= 0x000 (0) Start of Chip-8 RAM
 */
 
-/* Keyboard
-    1	2	3	C
-    4	5	6	D
-    7	8	9	E
-    A	0	B	F
+/*
+
+Keyboard
+1 2 3 C
+4 5 6 D
+7 8 9 E
+A 0 B F
+
+1 2 3 4		
+Q W E R		
+A S D F		
+Z X C V		
+
 */
 
 
 int main(int argv, char** args)
 {   
 
+    //Init Random Seed
+    srand(time(0));
+
     //New Chip8 Instance (Reset Values + Init Graphics)
     Chip8 chip8 = Chip8();
 
     //Load ROM into memory
-    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\4-flags.ch8");
+    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\3-corax+.ch8");
 
 
     /**
@@ -92,6 +103,11 @@ int main(int argv, char** args)
 
      */
 
+        // (After event loop)
+
+
+
+   
 
     bool quit = false;
     while (!quit)
@@ -101,52 +117,99 @@ int main(int argv, char** args)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_QUIT)
+            switch (event.type) 
             {
-                quit = true;
+                case SDL_KEYDOWN:
+                    cout << "Pressed Key: " << endl;
+                    chip8.pressKey(event.key.keysym.scancode);
+                    break;
+                case SDL_KEYUP:
+                    chip8.pressKey(0);
+                    break;
+                case SDL_QUIT:
+                    quit = true;
+                    break;
+                case SDL_WINDOWEVENT:
+                    if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                        if (event.window.windowID == SDL_GetWindowID(chip8.graphics.window)) {
+                            std::cout << "Window 1 closed" << std::endl;
+                            SDL_DestroyWindow(chip8.graphics.window);
+                            chip8.graphics.window = nullptr;
+                        } else if (event.window.windowID == SDL_GetWindowID(chip8.graphics.windowUI)) {
+                            std::cout << "Window 2 closed" << std::endl;
+                            SDL_DestroyWindow(chip8.graphics.windowUI);
+                            chip8.graphics.windowUI = nullptr;
+                        }
+                    }
+                    break;
             }
-            //ImGui_ImplSDL2_ProcessEvent(&event);
+            ImGui_ImplSDL2_ProcessEvent(&event); // Forward your event to backend
         }
 
 
+        // Start the Dear ImGui frame
+        ImGui_ImplSDLRenderer2_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f)); // place the next window in the top left corner (0,0)
+        ImGui::SetNextWindowSize(ImVec2(250,320)); // make the next window fullscreen
+        ImGui::Begin("Regiters");
+    
+        for (int i = 0; i < 15; i++)
+        {
+            ImGui::Text("V[%d]: %x", i, chip8.v[i]);
+        }
 
-        
+        if(chip8.pressedKey == 0) {
+            ImGui::Text("Last key Pressed: UNKNOWN KEY");
+        } else {
+            ImGui::Text("Last key Pressed: %x", chip8.pressedKey);
+        }
+
+        ImGui::End();
+
+        SDL_RenderClear(chip8.graphics.rendererUI);
 
         //Emulator Loop (Frame) 
         chip8.cycle();
 
-        
-
-
-        //Sleep
-        SDL_Delay(16);
-
         //Update Display
         if(chip8.drawFlag)
         {
-            /*ImGui_ImplSDLRenderer2_NewFrame();
-            ImGui_ImplSDL2_NewFrame();
-            ImGui::NewFrame();
-            ImGui::Begin("Hello, world!");
-            ImGui::Text("This is some useful text.");
-            ImGui::End();
-            ImGui::Render();
-            */
             chip8.drawFlag = false;
             chip8.updateDisplay();
         }
         
 
 
-      
+        
+
+        ImGui::Render();
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), chip8.graphics.rendererUI);
+        
+   
+        SDL_RenderPresent(chip8.graphics.rendererUI);
+
+
+
+        if (!chip8.graphics.window && !chip8.graphics.windowUI) {
+            quit = true;
+        }
+
+        
+        //Sleep
+        SDL_Delay(16);
+
         
     }
+    
+    ImGui_ImplSDLRenderer2_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
     chip8.destroyGraphics();
 
-    //ImGui_ImplSDLRenderer2_Shutdown();
-    //ImGui_ImplSDL2_Shutdown();
-    //ImGui::DestroyContext();
+
 
     return 0;
 }
