@@ -52,7 +52,7 @@ void Chip8::pressKey(SDL_Keycode key) {
 void Chip8::loadROM(string fileName) {
 
     //Open File
-    std::ifstream infile(fileName);
+    std::ifstream infile(fileName, std::ios::in | std::ios::binary);
 
     // Get length of file
     infile.seekg(0, std::ios::end);
