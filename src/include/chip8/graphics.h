@@ -12,9 +12,7 @@ class Graphics {
         SDL_Window* window;
         SDL_Renderer* renderer;
         SDL_Texture* texture;
-        SDL_Window* windowUI;
-        SDL_Renderer* rendererUI;
-        SDL_Texture* textureUI;
+        SDL_Texture* gameTexture;
         int SCALE;
         int WIDTH;
         int HEIGHT;
