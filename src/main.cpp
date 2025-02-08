@@ -84,7 +84,7 @@ int main(int argv, char** args)
     Chip8 chip8 = Chip8();
 
     //Load ROM into memory
-    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\3-corax.ch8");
+    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\3-corax+.ch8");
 
 
     /**

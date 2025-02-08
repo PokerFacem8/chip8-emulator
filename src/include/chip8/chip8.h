@@ -13,7 +13,8 @@ class Chip8
     unsigned char memory[4096]{};       // 4KB of memory
     unsigned short pc;                  // 16-bit program counter
     unsigned short index;               // 16-bit index register
-    std::stack<unsigned short> stack{};   // 64 16-bit addresses
+    unsigned short stack[16]{};   // 64 16-bit addresses
+    unsigned char sp;
     unsigned char delay_timer;          // 8-bit delay timer
     unsigned char sound_timer;          // 8-bit sound timer
     std::map<SDL_Keycode, unsigned int> keymap;
