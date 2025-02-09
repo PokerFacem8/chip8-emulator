@@ -1,3 +1,4 @@
 .vscode
 roms/*
+src/cpp_files_list.txt
 chip8-emulator.exe
