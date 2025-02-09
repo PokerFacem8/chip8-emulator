@@ -39,5 +39,5 @@ This is my attempt at creating a simple and lightweight CHIP-8 emulator. The emu
 3. Compile application:
    ```bash
    cd ../
-   g++ -g -std=c++17 -Ipath_to_project/src/include/SDl2 -Ipath_to_project/src/include/imgui -Ipath_to_project/src/include/chip8 -Lpath_to_project/src/lib @path_to_project/src/cpp_files_list.txt path_to_project/src/main.cpp -lmingw32 -lSDL2main -lSDL2 -o path_to_project/src/chip8-emulator.exe
+   g++ -g -std=c++17 -Ipath_to_project/src/include/SDl2 -Ipath_to_project/src/include/imgui -Ipath_to_project/src/include/chip8 -Lpath_to_project/src/lib @path_to_project/src/cpp_files_list.txt path_to_project/src/main.cpp -lmingw32 -lSDL2main -lSDL2 -o path_to_project/chip8-emulator.exe
 
