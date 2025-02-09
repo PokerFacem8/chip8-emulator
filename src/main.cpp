@@ -84,7 +84,7 @@ int main(int argv, char** args)
     Chip8 chip8 = Chip8();
 
     //Load ROM into memory
-    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\1-chip8-logo.ch8");
+    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\3-corax+.ch8");
 
 
     /**
@@ -135,16 +135,12 @@ int main(int argv, char** args)
                             std::cout << "Window 1 closed" << std::endl;
                             SDL_DestroyWindow(chip8.graphics.window);
                             chip8.graphics.window = nullptr;
-                        } else if (event.window.windowID == SDL_GetWindowID(chip8.graphics.windowUI)) {
-                            std::cout << "Window 2 closed" << std::endl;
-                            SDL_DestroyWindow(chip8.graphics.windowUI);
-                            chip8.graphics.windowUI = nullptr;
                         }
                     }
                     break;
             }
-            ImGui_ImplSDL2_ProcessEvent(&event); // Forward your event to backend
         }
+
 
         //Emulator Loop (Frame) 
         chip8.cycle();
@@ -155,31 +151,19 @@ int main(int argv, char** args)
             chip8.drawFlag = false;
             chip8.updateDisplay();
         }
-
-
-   
-        //SDL_RenderPresent(chip8.graphics.rendererUI);
-
-
-
-        if (!chip8.graphics.window && !chip8.graphics.windowUI) {
+        
+        if (!chip8.graphics.window) {
             quit = true;
         }
-
-        
+ 
         //Sleep
         SDL_Delay(16);
 
         
     }
-    
-    ImGui_ImplSDLRenderer2_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
+
 
     chip8.destroyGraphics();
-
-
 
     return 0;
 }

@@ -488,7 +488,5 @@ void Chip8::updateDisplay() {
 void Chip8::destroyGraphics() {
     SDL_DestroyRenderer(graphics.renderer);
     SDL_DestroyWindow(graphics.window);
-    SDL_DestroyRenderer(graphics.rendererUI);
-    SDL_DestroyWindow(graphics.windowUI);
     SDL_Quit();
 }
