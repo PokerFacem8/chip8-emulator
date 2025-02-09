@@ -3,7 +3,7 @@ This is my attempt at creating a simple and lightweight CHIP-8 emulator. The emu
 
 ## Tested ROMS
 
-To verify my Chip8 emulator I used the ([Chip8 Test Suite from Timendus](https://github.com/Timendus/chip8-test-suite)) which is an excellent resource for validating emulator implementations.
+To verify my Chip8 emulator I used the [Chip8 Test Suite from Timendus](https://github.com/Timendus/chip8-test-suite) which is an excellent resource for validating emulator implementations.
 
 | **ROM Name**              | **Description**                        | **Status**          |
 |---------------------------|----------------------------------------|---------------------|
