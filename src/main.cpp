@@ -78,6 +78,8 @@ Z X C V
 int main(int argv, char** args)
 {   
 
+    std::filesystem::current_path(std::filesystem::path(__FILE__).parent_path());
+
     //Init Random Seed
     srand(time(0));
 
@@ -90,8 +92,20 @@ int main(int argv, char** args)
 
     //List Available ROMS
     cout << "Available ROMS: " << endl;
-    for (const auto & entry : fs::directory_iterator("E:\\Personal\\Projects\\chip8-emulator\\roms"))
+
+    //Get Current Directory
+    std::filesystem::path romsPath = std::filesystem::current_path() / "../roms";
+    std::filesystem::path resolvedPath = std::filesystem::absolute(romsPath);
+
+
+    for (const auto & entry : fs::directory_iterator(resolvedPath))
     {   
+        //Ignore .gitignore
+        if(entry.path().filename() == ".gitignore")
+        {
+            continue;
+        }
+
         int index = roms.size() + 1;
         //Add to Map
         roms[index] = entry.path().string();
