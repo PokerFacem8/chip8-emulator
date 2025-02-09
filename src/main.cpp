@@ -188,7 +188,63 @@ int main(int argv, char** args)
                     }
                     break;
             }
+            ImGui_ImplSDL2_ProcessEvent(&event); // Forward your event to backend
         }
+
+
+        //Update the texture
+        SDL_RenderPresent(chip8.graphics.renderer);
+
+        // Update ImGui frame
+        ImGui_ImplSDLRenderer2_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        //Game
+        ImGui::SetNextWindowSize(ImVec2(640, 360));
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::Begin("Game");
+        ImGui::Image((ImTextureID)chip8.graphics.texture, ImVec2(640, 320));
+        ImGui::End();
+
+        //Registers
+        ImGui::SetNextWindowSize(ImVec2(300, 360));
+        ImGui::SetNextWindowPos(ImVec2(641, 0));
+        ImGui::Begin("Registers");
+        for (int i = 0; i < 16; i++)
+        {
+            ImGui::Text("V%X: %X", i, chip8.v[i]);
+        }
+        ImGui::End();
+
+
+        ImGui::Render();
+
+        SDL_SetRenderDrawColor(chip8.graphics.renderer, 0, 0, 0, 255);
+        SDL_RenderClear(chip8.graphics.renderer);
+
+        // Render Behind
+
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), chip8.graphics.renderer);
+
+        // Render Front
+
+        SDL_RenderPresent(chip8.graphics.renderer);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         //Emulator Loop (Frame) 
@@ -224,6 +280,9 @@ int main(int argv, char** args)
         }
     }
 
+    ImGui_ImplSDLRenderer2_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
     chip8.destroyGraphics();
 
