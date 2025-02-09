@@ -1,10 +1,11 @@
 #include <iostream>
 #include <fstream>
 #include <chip8.h>
+#include <filesystem>
 
 
 
-
+namespace fs = std::filesystem;
 using namespace std; 
 
 
@@ -83,8 +84,42 @@ int main(int argv, char** args)
     //New Chip8 Instance (Reset Values + Init Graphics)
     Chip8 chip8 = Chip8();
 
+
+    //Map of ROMS    
+    std::map<int, std::string> roms;
+
+    //List Available ROMS
+    cout << "Available ROMS: " << endl;
+    for (const auto & entry : fs::directory_iterator("E:\\Personal\\Projects\\chip8-emulator\\roms"))
+    {   
+        int index = roms.size() + 1;
+        //Add to Map
+        roms[index] = entry.path().string();
+        cout << index << " - " << entry.path().filename() << endl;
+    }
+
+    //Choose ROM
+    int choice;
+    while (true)
+    {
+        cout << "Choose ROM: ";
+        cin >> choice;
+
+        if(choice > 0 && choice <= roms.size())
+        {
+            break;
+        }
+        else
+        {
+            cout << "Invalid Choice!" << endl;
+        }
+    }
+    
     //Load ROM into memory
-    chip8.loadROM("E:\\Personal\\Projects\\chip8-emulator\\roms\\3-corax+.ch8");
+    chip8.loadROM(roms[choice]);
+
+    
+    
 
 
     /**
