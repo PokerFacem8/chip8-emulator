@@ -1,4 +1,4 @@
+# Exclude
 .vscode
-roms/*
-chip8-emulator.exe
 src/cpp_files_list.txt
+
