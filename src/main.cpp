@@ -2,7 +2,7 @@
 #include <fstream>
 #include <chip8.h>
 #include <filesystem>
-
+#include <windows.h> // WinApi header 
 
 
 namespace fs = std::filesystem;
@@ -208,7 +208,20 @@ int main(int argv, char** args)
         //Sleep
         SDL_Delay(16);
 
+        //Delay Timer
+        if(chip8.delay_timer > 0) {
+            chip8.delay_timer--;
+        }
         
+        //Sound Timer
+        if(chip8.sound_timer > 0) {
+            if (chip8.sound_timer == 1)
+            {
+                cout << "BEEP!" << endl;
+                Beep(523,500); // 523 hertz (C5) for 500 milliseconds 
+            }
+            chip8.sound_timer--;
+        }
     }
 
 

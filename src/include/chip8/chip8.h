@@ -15,8 +15,6 @@ class Chip8
     unsigned short index;               // 16-bit index register
     unsigned short stack[16]{};   // 64 16-bit addresses
     unsigned char sp;
-    unsigned char delay_timer;          // 8-bit delay timer
-    unsigned char sound_timer;          // 8-bit sound timer
     std::map<SDL_Keycode, unsigned int> keymap;
 
     unsigned char font[80] = {
@@ -44,6 +42,8 @@ class Chip8
         bool drawFlag;                  //Draw Flag
         Graphics graphics;
         unsigned int pressedKey;
+        unsigned char delay_timer;          // 8-bit delay timer
+        unsigned char sound_timer;          // 8-bit sound timer
 
         Chip8();
         void initGraphics();

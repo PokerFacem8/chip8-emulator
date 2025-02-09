@@ -1,11 +1,22 @@
 # CHIP8-Emulator
 This is my attempt at creating a simple and lightweight CHIP-8 emulator. The emulator is designed to run classic CHIP-8 games and applications, providing an environment to simulate the CHIP-8 virtual machine.
 
+## Tested ROMS
+
+To verify my Chip8 emulator I used the ([Chip8 Test Suite from Timendus](https://github.com/Timendus/chip8-test-suite)) which is an excellent resource for validating emulator implementations.
+
+| **ROM Name**              | **Description**                        | **Status**          |
+|---------------------------|----------------------------------------|---------------------|
+| CHIP-8 Splash Screen      | Displays the Chip-8 logo/splash screen.| Passed              |
+| IBM Logo                  | Displays the IBM logo.                 | Passed              |
+| Corax+ Opcode Test        | A ROM to test various Chip-8 opcodes.  | Passed              |
+| Flags Test                | A ROM to test math operations opcodes. | Not yet             |
+
 ## Features
 - [x] **Emulates CHIP-8 Instructions**: Fully supports the CHIP-8 instruction set.
 - [x] **Graphics Rendering**: Renders CHIP-8 graphics in a window using [Graphics Library].
-- [ ] **Sound Support**: Plays sound (if applicable).
-- [ ] **Keyboard Input**: Standard CHIP-8 key mapping for user input.
+- [x] **Sound Support**: Plays sound (if applicable).
+- [x] **Keyboard Input**: Standard CHIP-8 key mapping for user input.
 - [ ] **ImGui Interface**: Uses ImGui for an interactive graphical user interface for managing settings and interacting with the emulator.
 - [ ] **Debugger**: Built-in debugger for step-by-step execution and memory inspection.
 

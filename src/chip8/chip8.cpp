@@ -74,7 +74,7 @@ void Chip8::loadROM(string fileName) {
     cout << "Dump Memory: " << endl;
     for (int i = 0; i < length; i++)
     {
-        cout << hex << (int)memory[i + pc];
+        cout << (i + pc) << " - " << hex << (int)memory[i + pc] << endl;
     }
     cout << "------------------" << endl;
     //Close File
@@ -252,19 +252,6 @@ void Chip8::cycle(){
                 cout << "Unknown instruction!" << endl;
                 break; 
         }
-
-        if(delay_timer > 0) {
-            delay_timer--;
-        }
-
-        if(sound_timer > 0) {
-            if (sound_timer == 1)
-            {
-                cout << "BEEP!" << endl;
-            }
-            sound_timer--;
-        }
-
         ipf--;
     }
 }
@@ -313,21 +300,27 @@ void Chip8::xFinstructions(unsigned short opcode) {
 
             memory[index]     = v[(opcode & 0x0F00) >> 8] / 100;
             memory[index + 1] = (v[(opcode & 0x0F00) >> 8] / 10) % 10;
-            memory[index + 2] = (v[(opcode & 0x0F00) >> 8] % 100) % 10; 
+            memory[index + 2] = v[(opcode & 0x0F00) >> 8] % 10; 
             break;
 
         case 0x55: // LD [I], Vx 
 
-            for(unsigned int i = 0; i < ((opcode & 0x0F00) >> 8); i++){
-                memory[index + i] = v[i];
+            value = index;
+            for(int i = 0; i <= ((opcode & 0x0F00) >> 8); i++){
+                memory[index] = v[i];
+                index++;
             }
+            index = value;
             break;
 
         case 0x65: // LD Vx, [I]
 
-            for(unsigned int i = 0; i < ((opcode & 0x0F00) >> 8); i++){
-                v[i] = memory[index + i];
+            value = index;
+            for(int i = 0; i <= ((opcode & 0x0F00) >> 8); i++){
+                v[i] = memory[index];
+                index++;
             }
+            index = value;
             break;
             
         default:
@@ -364,63 +357,31 @@ void Chip8::x8instructions(unsigned short opcode){
         case 4: //ADD Vx, Vy (Validated)
 
             v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4];
-            if (v[(opcode & 0x00F0) >> 4]  > (0xFF - v[(opcode & 0x0F00) >> 8])) {
-                v[15] = 1;
-            }else {
-                v[15] = 0;
-            }
-            
+            v[15] = v[(opcode & 0x0F00) >> 8] + v[(opcode & 0x00F0) >> 4] > 255 ? 1 : 0;
             break;
 
-        case 5: // SUB Vx, Vy (Validated) (VF is wrong)
+        case 5: // SUB Vx, Vy (Validated)
 
             v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] - v[(opcode & 0x00F0) >> 4];
-            if (v[(opcode & 0x00F0) >> 4] > v[(opcode & 0x0F00) >> 8]) {
-                v[15] = 1;
-            } else {
-                v[15] = 0;
-            }
+            v[15] = v[(opcode & 0x00F0) >> 4] > v[(opcode & 0x0F00) >> 8] ? 0 : 1;
             break;
 
         case 6: //SHR Vx {, Vy} (Validated)
 
-            //TODO: Line 219 must be configurable by ther user (Some roms ignore Vy)
-            //v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4];
-
-            v[15] = (v[(opcode & 0x0F00) >> 8] & 0x1);
-            //v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] / 2;
+            v[15] = v[(opcode & 0x0F00) >> 8] & 0x01;
             v[(opcode & 0x0F00) >> 8] >>= 1;
             break;
 
         case 7: //  SUBN Vx, Vy (Validated)
 
-            //Sorry, that was very short, indeed, you should first calculate the flag into a temp, set Vx and then vf to that temp.
-
-
             v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4] - v[(opcode & 0x0F00) >> 8];
-            if(v[(opcode & 0x00F0) >> 4] > v[(opcode & 0x0F00) >> 8]) {
-                v[15] = 1;
-            } else {
-                v[15] = 0;
-            }
-            
+            v[15] = v[(opcode & 0x00F0) >> 4] > v[(opcode & 0x0F00) >> 8] ? 1 : 0;
             break;
 
         case 0xE: //SHL Vx {, Vy} (Validated)
 
-            //TODO: Line 237 must be configurable by ther user (Some roms ignore Vy)
-            //[(opcode & 0x0F00) >> 8] = v[(opcode & 0x00F0) >> 4];
-
-            
-            
-
-            
-
-            v[15] = (v[(opcode & 0x0F00) >> 8] & 0x80 >> 7);
-            //v[(opcode & 0x0F00) >> 8] = v[(opcode & 0x0F00) >> 8] * 2;
-
-            v[(opcode & 0x0F00) >> 8] <<=1;
-
+            v[15] = (v[(opcode & 0x00F0) >> 4] >> 7) & 0x1;
+            v[(opcode & 0x0F00) >> 8] <<= 1;
             break;
 
         default:
