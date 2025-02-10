@@ -16,7 +16,7 @@ To verify my Chip8 emulator I used the [Chip8 Test Suite from Timendus](https://
 
 ## Features
 - [x] **Emulates CHIP-8 Instructions**: Fully supports the CHIP-8 instruction set.
-- [x] **Graphics Rendering**: Renders CHIP-8 graphics in a window using [Graphics Library].
+- [x] **Graphics Rendering**: Renders CHIP-8 graphics in a window using SDL2.
 - [x] **Sound Support**: Plays sound (if applicable).
 - [x] **Keyboard Input**: Standard CHIP-8 key mapping for user input.
 - [ ] **ImGui Interface**: Uses ImGui for an interactive graphical user interface for managing settings and interacting with the emulator.
