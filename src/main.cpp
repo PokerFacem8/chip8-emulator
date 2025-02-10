@@ -86,12 +86,8 @@ int main(int argv, char** args)
     //New Chip8 Instance (Reset Values + Init Graphics)
     Chip8 chip8 = Chip8();
 
-
     //Map of ROMS    
-    std::map<int, std::string> roms;
-
-    //List Available ROMS
-    cout << "Available ROMS: " << endl;
+    std::map<std::string, std::string> roms;
 
     //Get Current Directory
     std::filesystem::path romsPath = std::filesystem::current_path() / "../roms";
@@ -106,35 +102,9 @@ int main(int argv, char** args)
             continue;
         }
 
-        int index = roms.size() + 1;
         //Add to Map
-        roms[index] = entry.path().string();
-        cout << index << " - " << entry.path().filename() << endl;
+        roms[entry.path().filename().string()] = entry.path().string();
     }
-
-    //Choose ROM
-    int choice;
-    while (true)
-    {
-        cout << "Choose ROM: ";
-        cin >> choice;
-
-        if(choice > 0 && choice <= roms.size())
-        {
-            break;
-        }
-        else
-        {
-            cout << "Invalid Choice!" << endl;
-        }
-    }
-    
-    //Load ROM into memory
-    chip8.loadROM(roms[choice]);
-
-    
-    
-
 
     /**
      * 
@@ -150,13 +120,7 @@ int main(int argv, char** args)
         dxyn in which case you do that opcode and then 
         finish the loop early.
 
-     */
-
-        // (After event loop)
-
-
-
-   
+    */
 
     bool quit = false;
     while (!quit)
@@ -166,6 +130,7 @@ int main(int argv, char** args)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
+            ImGui_ImplSDL2_ProcessEvent(&event); // Forward your event to backend
             switch (event.type) 
             {
                 case SDL_KEYDOWN:
@@ -188,7 +153,7 @@ int main(int argv, char** args)
                     }
                     break;
             }
-            ImGui_ImplSDL2_ProcessEvent(&event); // Forward your event to backend
+            
         }
 
 
@@ -216,6 +181,25 @@ int main(int argv, char** args)
             ImGui::Text("V%X: %X", i, chip8.v[i]);
         }
         ImGui::End();
+
+
+
+        //Menu to Load ROM
+        ImGui::SetNextWindowSize(ImVec2(300, 360));
+        ImGui::SetNextWindowPos(ImVec2(942, 0));
+        ImGui::Begin("ROMS");
+        for (const auto & [key, value] : roms)
+        {
+            if(ImGui::Button(key.c_str()))
+            {
+                //Print
+                cout << "Loading ROM: " << value << endl;
+                chip8.unLoadROM();
+                chip8.loadROM(value);
+            }
+        }
+        ImGui::End();
+
 
 
         ImGui::Render();
@@ -274,7 +258,7 @@ int main(int argv, char** args)
             if (chip8.sound_timer == 1)
             {
                 cout << "BEEP!" << endl;
-                Beep(523,500); // 523 hertz (C5) for 500 milliseconds 
+                Beep(523,100); // 523 hertz (C5) for 500 milliseconds 
             }
             chip8.sound_timer--;
         }

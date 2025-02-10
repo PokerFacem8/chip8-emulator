@@ -15,7 +15,6 @@ class Chip8
     unsigned short index;               // 16-bit index register
     unsigned short stack[16]{};   // 64 16-bit addresses
     unsigned char sp;
-    std::map<SDL_Keycode, unsigned int> keymap;
 
     unsigned char font[80] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -44,11 +43,13 @@ class Chip8
         unsigned int pressedKey;
         unsigned char delay_timer;          // 8-bit delay timer
         unsigned char sound_timer;          // 8-bit sound timer
+        std::map<SDL_Keycode, unsigned int> keymap;
 
         Chip8();
         void initGraphics();
         void pressKey(SDL_Keycode key);
         void loadROM(std::string fileName);
+        void unLoadROM();
         void cycle();
         void xFinstructions(unsigned short opcode);
         void x8instructions(unsigned short opcode);

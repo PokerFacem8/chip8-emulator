@@ -15,8 +15,7 @@ Chip8::Chip8() : graphics() {
     sp = 0;
     sound_timer = 0x000;
     drawFlag = false;
-    initGraphics();
-
+    pressedKey = 0;
     keymap[SDL_SCANCODE_1] = 0x1;
     keymap[SDL_SCANCODE_2] = 0x2;
     keymap[SDL_SCANCODE_3] = 0x3;
@@ -34,11 +33,14 @@ Chip8::Chip8() : graphics() {
     keymap[SDL_SCANCODE_C] = 0xB;
     keymap[SDL_SCANCODE_V] = 0xF;
 
+
     //Load Font
     for (int i = 0; i < 80; i++)
     {
         memory[i] = font[i];
     }
+
+    initGraphics();
 }
 
 void Chip8::initGraphics() {
@@ -71,14 +73,37 @@ void Chip8::loadROM(string fileName) {
     }
 
     //Dump Memory
-    cout << "Dump Memory: " << endl;
-    for (int i = 0; i < length; i++)
-    {
-        cout << (i + pc) << " - " << hex << (int)memory[i + pc] << endl;
-    }
-    cout << "------------------" << endl;
+    //cout << "Dump Memory: " << endl;
+    //for (int i = 0; i < length; i++)
+    //{
+    //    cout << (i + pc) << " - " << hex << (int)memory[i + pc] << endl;
+    //}
+    //cout << "------------------" << endl;
     //Close File
     infile.close();
+}
+
+void Chip8::unLoadROM() {
+    for (int i = 0; i < 4096; i++)
+    {
+        memory[i + 512] = 0;
+    }
+    //Reset Display
+    for (int i = 0; i < 64; i++)
+    {
+        for (int j = 0; j < 32; j++)
+        {
+            display[i][j] = 0;
+        }
+    }
+
+    pc = 0x200;
+    index = 0x0000;
+    delay_timer = 0x000;
+    sp = 0;
+    sound_timer = 0x000;
+    drawFlag = false;
+
 }
 
 void Chip8::cycle(){
