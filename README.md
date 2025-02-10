@@ -32,7 +32,7 @@ To verify my Chip8 emulator I used the [Chip8 Test Suite from Timendus](https://
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/chip8-emulator.git
+   git clone https://github.com/PokerFacem8/chip8-emulator.git
    cd chip8-emulator/src
    
 2. Change paths of cpp_files_list:
