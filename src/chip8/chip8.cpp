@@ -162,6 +162,7 @@ void Chip8::cycle(){
         unsigned char firstByte = memory[pc];
         unsigned char secondByte = memory[pc + 1];  
         unsigned short opcode = (firstByte << 8) | secondByte;
+        lastOpcode = opcode;
 
         //Get First Code from Opcode
         //Opcode :              1010 0000 1111 0000  (0xAF0)

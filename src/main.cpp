@@ -135,7 +135,6 @@ int main(int argv, char** args)
             switch (event.type) 
             {
                 case SDL_KEYDOWN:
-                    chip8.pushLog("Pressed Key: " + to_string(event.key.keysym.scancode));
                     chip8.pressKey(event.key.keysym.scancode);
                     break;
                 case SDL_KEYUP:
@@ -157,14 +156,16 @@ int main(int argv, char** args)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        //Game
+        //Game Display
         ImGui::SetNextWindowSize(ImVec2(660, 360));
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::Begin("Game");
         ImGui::Image((ImTextureID)chip8.graphics.texture, ImVec2(640, 320));
         ImGui::End();
 
-        //Create Console Logger
+        //--------------------------------------------//
+
+        //Console Debug
         ImGui::SetNextWindowSize(ImVec2(660, 360));
         ImGui::SetNextWindowPos(ImVec2(0, 361));
         ImGui::Begin("Debug Console", nullptr, ImGuiWindowFlags_HorizontalScrollbar);
@@ -175,25 +176,33 @@ int main(int argv, char** args)
         }
         ImGui::End();
 
+        //--------------------------------------------//
 
-
-
-
-
-
-
-
-        //Registers
-        ImGui::SetNextWindowSize(ImVec2(300, 360));
-        ImGui::SetNextWindowPos(ImVec2(661, 361));
-        ImGui::Begin("Registers");
+        //Emulator Memory
+        ImGui::SetNextWindowSize(ImVec2(282, 360));
+        ImGui::SetNextWindowPos(ImVec2(661, 0));
+        ImGui::Begin("Memory");
+        ImGui::Columns(2);
+        //Column for Registers
+        ImGui::Text("Registers");
         for (int i = 0; i < 16; i++)
         {
             ImGui::Text("V%X: %X", i, chip8.v[i]);
         }
+        ImGui::NextColumn();
+        //Column for Timers
+        ImGui::Text("Counters/Timers");
+        ImGui::Text("PC: %X", chip8.pc);
+        ImGui::Text("I: %X", chip8.index);
+        ImGui::Text("SP: %X", chip8.sp);
+        ImGui::Text("Last Opcode: %X", chip8.lastOpcode);
+        ImGui::Text("Draw Flag: %s", chip8.drawFlag ? "True" : "False");
+        ImGui::Text("Pressed Key: %X", chip8.pressedKey);
+        ImGui::Text("Delay Timer: %X", chip8.delay_timer);
+        ImGui::Text("Sound Timer: %X", chip8.sound_timer);
         ImGui::End();
 
-
+        //--------------------------------------------//
 
         //Menu to Load ROM
         ImGui::SetNextWindowSize(ImVec2(300, 360));
@@ -212,7 +221,7 @@ int main(int argv, char** args)
         }
         ImGui::End();
 
-
+        //--------------------------------------------//
 
         ImGui::Render();
 

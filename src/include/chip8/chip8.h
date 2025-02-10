@@ -11,10 +11,7 @@
 class Chip8
 {
     unsigned char memory[4096]{};       // 4KB of memory
-    unsigned short pc;                  // 16-bit program counter
-    unsigned short index;               // 16-bit index register
     unsigned short stack[16]{};   // 64 16-bit addresses
-    unsigned char sp;
 
     unsigned char font[80] = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -36,10 +33,14 @@ class Chip8
     };        
 
     public:
+        unsigned short pc;                  // 16-bit program counter
+        unsigned short index;          // 16-bit index register
+        unsigned char sp;
         unsigned char display[64][32]{};// 64 x 32 monochrome display
         unsigned char v[16]{};          // 16 8-bit general-purpose variable registers
         bool drawFlag;                  //Draw Flag
         Graphics graphics;
+        unsigned short lastOpcode;
         unsigned int pressedKey;
         unsigned char delay_timer;          // 8-bit delay timer
         unsigned char sound_timer;          // 8-bit sound timer
