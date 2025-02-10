@@ -77,6 +77,7 @@ Z X C V
 
 int main(int argv, char** args)
 {   
+    //FreeConsole(); (Use for Release)
 
     std::filesystem::current_path(std::filesystem::path(__FILE__).parent_path());
 
@@ -134,7 +135,7 @@ int main(int argv, char** args)
             switch (event.type) 
             {
                 case SDL_KEYDOWN:
-                    cout << "Pressed Key: " << endl;
+                    chip8.pushLog("Pressed Key: " + to_string(event.key.keysym.scancode));
                     chip8.pressKey(event.key.keysym.scancode);
                     break;
                 case SDL_KEYUP:
@@ -142,15 +143,6 @@ int main(int argv, char** args)
                     break;
                 case SDL_QUIT:
                     quit = true;
-                    break;
-                case SDL_WINDOWEVENT:
-                    if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
-                        if (event.window.windowID == SDL_GetWindowID(chip8.graphics.window)) {
-                            std::cout << "Window 1 closed" << std::endl;
-                            SDL_DestroyWindow(chip8.graphics.window);
-                            chip8.graphics.window = nullptr;
-                        }
-                    }
                     break;
             }
             
@@ -166,15 +158,34 @@ int main(int argv, char** args)
         ImGui::NewFrame();
 
         //Game
-        ImGui::SetNextWindowSize(ImVec2(640, 360));
+        ImGui::SetNextWindowSize(ImVec2(660, 360));
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::Begin("Game");
         ImGui::Image((ImTextureID)chip8.graphics.texture, ImVec2(640, 320));
         ImGui::End();
 
+        //Create Console Logger
+        ImGui::SetNextWindowSize(ImVec2(660, 360));
+        ImGui::SetNextWindowPos(ImVec2(0, 361));
+        ImGui::Begin("Debug Console", nullptr, ImGuiWindowFlags_HorizontalScrollbar);
+        //Print Console Stack
+        for (int i = 45; i >= 0; i--)
+        {
+            ImGui::Text(chip8.console[i].c_str());
+        }
+        ImGui::End();
+
+
+
+
+
+
+
+
+
         //Registers
         ImGui::SetNextWindowSize(ImVec2(300, 360));
-        ImGui::SetNextWindowPos(ImVec2(641, 0));
+        ImGui::SetNextWindowPos(ImVec2(661, 361));
         ImGui::Begin("Registers");
         for (int i = 0; i < 16; i++)
         {
@@ -193,7 +204,8 @@ int main(int argv, char** args)
             if(ImGui::Button(key.c_str()))
             {
                 //Print
-                cout << "Loading ROM: " << value << endl;
+                //cout << "Loading ROM: " << value << endl;
+                chip8.pushLog("Loading ROM: " + value);
                 chip8.unLoadROM();
                 chip8.loadROM(value);
             }
@@ -257,7 +269,7 @@ int main(int argv, char** args)
         if(chip8.sound_timer > 0) {
             if (chip8.sound_timer == 1)
             {
-                cout << "BEEP!" << endl;
+                chip8.pushLog("BEEP");
                 Beep(523,100); // 523 hertz (C5) for 500 milliseconds 
             }
             chip8.sound_timer--;

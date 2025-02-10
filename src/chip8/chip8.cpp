@@ -41,6 +41,37 @@ Chip8::Chip8() : graphics() {
     }
 
     initGraphics();
+
+    pushLog("Chip8 Initialized");
+}
+
+void Chip8::pushLog(string log) {
+
+    /*
+        [0] - New Log
+        [1] - Old Log
+        [2] - Old Log
+        [3] - Old Log
+        [4] - Old Log
+        [5] - Old Log
+        [6] - Old Log
+        [7] - Old Log
+        [8] - Old Log
+        [9] - Old Log
+        [10] - Old Log
+        [11] - Old Log
+        [12] - Old Log
+        [13] - Old Log
+        [14] - Old Log
+        [15] - Old Log
+    */
+
+    //Inverse Loop (Replace Old Logs)
+    for (int i = 49; i > 0; i--)
+    {
+        console[i] = console[i - 1];
+    }
+    console[0] = log;
 }
 
 void Chip8::initGraphics() {
@@ -84,10 +115,13 @@ void Chip8::loadROM(string fileName) {
 }
 
 void Chip8::unLoadROM() {
+
+    //Reset Memory (ROM)
     for (int i = 0; i < 4096; i++)
     {
         memory[i + 512] = 0;
     }
+
     //Reset Display
     for (int i = 0; i < 64; i++)
     {
@@ -97,6 +131,7 @@ void Chip8::unLoadROM() {
         }
     }
 
+    //Reset Counters/Timers
     pc = 0x200;
     index = 0x0000;
     delay_timer = 0x000;
@@ -137,9 +172,6 @@ void Chip8::cycle(){
 
         //PRINT OPCODE
         cout << hex << "Opcode: " << opcode << endl;
-
-        //PRINT CODE
-        //cout << hex << code << endl;  
 
         //Increment Program Counter
         pc = pc + 2;
@@ -274,7 +306,7 @@ void Chip8::cycle(){
                 break;
             
             default:
-                cout << "Unknown instruction!" << endl;
+                pushLog("Unknown instruction: " + opcode);
                 break; 
         }
         ipf--;
@@ -349,7 +381,7 @@ void Chip8::xFinstructions(unsigned short opcode) {
             break;
             
         default:
-            cout << "Couldn't find 0xF instruction!" << endl;
+            pushLog("Couldn't find 0xF instruction: " + opcode);
             break;
     }
 
@@ -410,7 +442,7 @@ void Chip8::x8instructions(unsigned short opcode){
             break;
 
         default:
-            cout << "Couldn't find 0x8 instruction!" << endl;
+            pushLog("Couldn't find 0x8 instruction: " + opcode);
             break;
     }
 
@@ -474,5 +506,6 @@ void Chip8::updateDisplay() {
 void Chip8::destroyGraphics() {
     SDL_DestroyRenderer(graphics.renderer);
     SDL_DestroyWindow(graphics.window);
+    SDL_DestroyTexture(graphics.texture);
     SDL_Quit();
 }

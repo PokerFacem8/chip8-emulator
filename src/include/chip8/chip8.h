@@ -44,9 +44,11 @@ class Chip8
         unsigned char delay_timer;          // 8-bit delay timer
         unsigned char sound_timer;          // 8-bit sound timer
         std::map<SDL_Keycode, unsigned int> keymap;
+        std::string console[50]{};   // 64 16-bit addresses
 
         Chip8();
         void initGraphics();
+        void pushLog(std::string log);
         void pressKey(SDL_Keycode key);
         void loadROM(std::string fileName);
         void unLoadROM();
