@@ -1,7 +1,7 @@
 # CHIP8-Emulator
 This is my attempt at creating a simple and lightweight CHIP-8 emulator. The emulator is designed to run classic CHIP-8 games and applications, providing an environment to simulate the CHIP-8 virtual machine.
 
-[Demo](https://github.com/PokerFacem8/chip8-emulator/blob/main/screenshots/demo.png?raw=true)
+![Demo](https://github.com/PokerFacem8/chip8-emulator/blob/main/screenshots/demo.png?raw=true)
 
 ## Tested ROMS
 
