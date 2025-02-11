@@ -15,7 +15,7 @@ Chip8::Chip8() : graphics() {
     sp = 0;
     sound_timer = 0x000;
     drawFlag = false;
-    pressedKey = 0;
+    pressedKey = -1;
     keymap[SDL_SCANCODE_1] = 0x1;
     keymap[SDL_SCANCODE_2] = 0x2;
     keymap[SDL_SCANCODE_3] = 0x3;
@@ -79,6 +79,10 @@ void Chip8::initGraphics() {
 }
 
 void Chip8::pressKey(SDL_Keycode key) {
+    if(key == -1) {
+        pressedKey = -1;
+        return;
+    }
     pressedKey = keymap[key];
 }
 
@@ -329,7 +333,7 @@ void Chip8::xFinstructions(unsigned short opcode) {
 
         case 0x0A: // LD Vx, K
 
-            if(pressedKey == 0x0) {
+            if(pressedKey == -1) {
                 pc = pc - 2;
             }
             break;

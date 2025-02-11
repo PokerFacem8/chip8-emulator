@@ -138,7 +138,7 @@ int main(int argv, char** args)
                     chip8.pressKey(event.key.keysym.scancode);
                     break;
                 case SDL_KEYUP:
-                    chip8.pressKey(0);
+                    chip8.pressKey(-1);
                     break;
                 case SDL_QUIT:
                     quit = true;

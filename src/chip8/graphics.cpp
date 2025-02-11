@@ -65,7 +65,13 @@ void Graphics::drawDisplay(unsigned char display[64][32]) {
 
 void Graphics::clear(unsigned char display[64][32]) {
     //Clear display matrix
-    display[64][32] = {0};
+    for (int i = 0; i < 64; i++)
+    {
+        for (int j = 0; j < 32; j++)
+        {
+            display[i][j] = 0;
+        }
+    }
     SDL_RenderClear(renderer);
 }
 
