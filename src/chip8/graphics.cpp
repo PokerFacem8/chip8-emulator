@@ -65,6 +65,7 @@ void Graphics::drawDisplay(unsigned char display[64][32]) {
 
 void Graphics::clear(unsigned char display[64][32]) {
     //Clear display matrix
+    display[64][32] = {0};
     SDL_RenderClear(renderer);
 }
 
