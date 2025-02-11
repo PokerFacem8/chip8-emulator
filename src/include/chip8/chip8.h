@@ -46,6 +46,7 @@ class Chip8
         unsigned char sound_timer;          // 8-bit sound timer
         std::map<SDL_Keycode, unsigned int> keymap;
         std::string console[50]{};   // 64 16-bit addresses
+        bool debugMode;
 
         Chip8();
         void initGraphics();

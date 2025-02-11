@@ -7,17 +7,18 @@
 
 
 Graphics::Graphics(){
-    SCALE = 10;
-    WIDTH = 64;
-    HEIGHT = 32;
+    WIDTH = 640;
+    HEIGHT = 320;
 };
 
 void Graphics::init() {
+
+
     SDL_Init(SDL_INIT_EVERYTHING);
     window = SDL_CreateWindow("CHIP8 EMU", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1242, 720, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 640, 320);
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WIDTH, HEIGHT);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -29,6 +30,18 @@ void Graphics::init() {
 
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
+}
+
+void Graphics::fullscreen(bool fullscreen) {
+
+    if (fullscreen)
+    {
+        WIDTH = 1222;
+        HEIGHT = 680;
+    } else {
+        WIDTH = 640;
+        HEIGHT = 320;
+    }
 }
 
 void Graphics::drawDisplay(unsigned char display[64][32]) {
@@ -50,10 +63,10 @@ void Graphics::drawDisplay(unsigned char display[64][32]) {
             if (display[i][j] == 1)
             {
                 SDL_Rect rect;
-                rect.x = i * SCALE;
-                rect.y = j * SCALE;
-                rect.w = SCALE;
-                rect.h = SCALE;
+                rect.x = i * 10;
+                rect.y = j * 10;
+                rect.w = 10;
+                rect.h = 10;
                 SDL_RenderFillRect(renderer, &rect);
             }
         }

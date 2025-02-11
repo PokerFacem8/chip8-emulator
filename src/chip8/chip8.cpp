@@ -40,9 +40,12 @@ Chip8::Chip8() : graphics() {
         memory[i] = font[i];
     }
 
+    debugMode = true;
+
     initGraphics();
 
     pushLog("Chip8 Initialized");
+
 }
 
 void Chip8::pushLog(string log) {

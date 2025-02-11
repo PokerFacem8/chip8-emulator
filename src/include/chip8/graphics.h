@@ -13,13 +13,17 @@ class Graphics {
         SDL_Renderer* renderer;
         SDL_Texture* texture;
         SDL_Texture* gameTexture;
-        int SCALE;
+        int SCALEX;
+        int SCALEY;
         int WIDTH;
         int HEIGHT;
+        int SCREENX;
+        int SCREENY;
       
 
         Graphics();
         void init();
+        void fullscreen(bool fullscreen);
         void drawDisplay(unsigned char display[64][32]);
         void clear(unsigned char display[64][32]);
 };
